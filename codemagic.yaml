@@ -22,9 +22,34 @@ workflows:
       - name: Build APK
         script: |
           PROJECT_DIR=$(dirname "$(find project -name settings.gradle.kts -print -quit)")
+
+          if [ -z "$PROJECT_DIR" ] || [ ! -f "$PROJECT_DIR/app/build.gradle.kts" ]; then
+            echo "Android Gradle project not found"
+            exit 1
+          fi
+
+          APP_FILE="$PROJECT_DIR/app/build.gradle.kts"
+
+          cat >> "$APP_FILE" <<'GRADLE'
+
+          android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+          }
+
+          tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+          GRADLE
+
           cd "$PROJECT_DIR"
-          /tmp/gradle-8.9/bin/gradle :app:assembleDebug
+          /tmp/gradle-8.9/bin/gradle --no-daemon :app:assembleDebug
 
     artifacts:
       - project/**/app/build/outputs/apk/debug/*.apk
+      
       
