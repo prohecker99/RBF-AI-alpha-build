@@ -1,0 +1,30 @@
+
+workflows:
+  android-build:
+    name: RBF AI Android APK
+    max_build_duration: 60
+    instance_type: linux_x2
+
+    environment:
+      java: 17
+
+    scripts:
+      - name: Extract Android project
+        script: |
+          mkdir -p project
+          unzip -o RentABoyfriendAndroid_Demo.zip -d project
+
+      - name: Install Gradle
+        script: |
+          curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp
+
+      - name: Build APK
+        script: |
+          PROJECT_DIR=$(dirname "$(find project -name settings.gradle.kts -print -quit)")
+          cd "$PROJECT_DIR"
+          /tmp/gradle-8.9/bin/gradle :app:assembleDebug
+
+    artifacts:
+      - project/**/app/build/outputs/apk/debug/*.apk
+      
